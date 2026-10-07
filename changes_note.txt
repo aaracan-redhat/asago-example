@@ -1,0 +1,156 @@
+=================================================================
+SETUP NOTES: Running risk-extraction-demo.ipynb
+=================================================================
+
+CHANGES MADE TO FIX THE NOTEBOOK
+---------------------------------
+
+1. Python Version Fix (CRITICAL)
+   - Changed pyproject.toml line 4 from:
+     requires-python = ">=3.14"
+   - To:
+     requires-python = ">=3.13,<3.14"
+
+   WHY: Python 3.14 has breaking changes that cause Jupyter to crash
+   with "ValueError: DELIM not in msg_list" error. Python 3.13 is stable.
+
+2. Dependencies Installed
+   - Command: uv sync --extra policy-mapper
+   - This creates .venv with Python 3.13.15 and all required packages
+
+3. AI Atlas Nexus Repository
+   - Cloned from: https://github.com/IBM/ai-atlas-nexus
+   - Using branch: main (v1.2.5 - required for Pydantic v2 compatibility)
+   - Location: /Users/aaracan/Visual Studio Code Projects/asago-examples/ai-atlas-nexus
+
+   IMPORTANT: v1.2.3 has schema validation errors with Pydantic v2.
+   Must use main branch (v1.2.5+) for compatibility.
+
+   Note: There are TWO ai-atlas-nexus folders:
+   - /Users/aaracan/Visual Studio Code Projects/ai-atlas-nexus (your existing one)
+   - /Users/aaracan/Visual Studio Code Projects/asago-examples/ai-atlas-nexus (new, for this notebook)
+
+4. Environment Variables
+   - Created .env file in asago-examples/ with:
+     export POLICY_MAPPER_BASE_URL="http://vllm-gemma-4-26b-a4b-it.user-aaracan.svc.cluster.local:8000/v1"
+     export POLICY_MAPPER_MODEL="gemma-4-26b-a4b-it"
+     export NEXUS_BASE_DIR="/Users/aaracan/Visual Studio Code Projects/asago-examples/ai-atlas-nexus"
+     export POLICY_EXAMPLES_DIR="/Users/aaracan/Visual Studio Code Projects/asago-examples/asago-policy-mapper/policy_examples"
+
+=================================================================
+TO RUN THE NOTEBOOK NEXT TIME (FRESH START)
+=================================================================
+
+PREREQUISITES:
+--------------
+1. Have Python 3.13 installed (NOT 3.14)
+2. Have uv installed (package manager)
+3. Have access to Kubernetes cluster (for vLLM endpoint)
+
+SETUP STEPS:
+------------
+1. Navigate to the project:
+   cd "/Users/aaracan/Visual Studio Code Projects/asago-examples"
+
+2. Install dependencies:
+   uv sync --extra policy-mapper
+
+   This will:
+   - Create .venv with Python 3.13
+   - Install all required packages including Jupyter, policy-mapper, etc.
+
+3. Make sure ai-atlas-nexus exists:
+   - Check if folder exists: ls ai-atlas-nexus
+   - If missing, run:
+     git clone https://github.com/IBM/ai-atlas-nexus
+     git -C ai-atlas-nexus checkout main
+
+   IMPORTANT: Must use main branch, NOT v1.2.3 (Pydantic v2 compatibility)
+
+4. Set environment variables (one of these options):
+
+   Option A - Load from .env file:
+   source .env
+   code .
+
+   Option B - Set directly in notebook cell #2:
+   BASE_URL = "http://vllm-gemma-4-26b-a4b-it.user-aaracan.svc.cluster.local:8000/v1"
+   MODEL = "gemma-4-26b-a4b-it"
+   NEXUS_BASE_DIR = "/Users/aaracan/Visual Studio Code Projects/ai-atlas-nexus"
+   POLICY_EXAMPLES_DIR = "/Users/aaracan/Visual Studio Code Projects/asago-examples/asago-policy-mapper/policy_examples"
+
+5. Open notebook in VS Code:
+   - File: asago-policy-mapper/risk-extraction-demo.ipynb
+   - NOT the checkpoint version: .ipynb_checkpoints/risk-extraction-demo-checkpoint.ipynb
+
+6. Select the correct kernel:
+   - Click kernel selector in top-right corner
+   - Choose: Python 3.13.15 ('.venv': venv)
+   - Must show .venv, not system Python
+
+7. Ensure cluster access:
+   - vLLM endpoint is a Kubernetes service
+   - May need VPN or kubectl port-forward if not accessible
+
+8. Run the cells sequentially
+   - Cell 7 (imports) will verify everything is working
+   - Extraction in cell 11 takes 5-10 minutes
+
+=================================================================
+TROUBLESHOOTING
+=================================================================
+
+Error: "DELIM not in msg_list"
+→ Wrong Python version. Make sure .venv uses Python 3.13, not 3.14
+→ Recreate venv: rm -rf .venv && uv sync --extra policy-mapper
+
+Error: "ModuleNotFoundError: No module named 'ai_atlas_nexus'"
+→ Wrong kernel selected or dependencies not installed
+→ Select .venv kernel and run: uv sync --extra policy-mapper
+
+Error: "FileNotFoundError" for ai-atlas-nexus
+→ Clone the repository:
+  git clone https://github.com/IBM/ai-atlas-nexus
+  git -C ai-atlas-nexus checkout v1.2.3
+
+Error: ValidationError with "547 validation errors for Container"
+→ ai-atlas-nexus version mismatch with Pydantic v2
+→ Update both package and data to main branch:
+  - Edit pyproject.toml: change v1.2.3 to @main
+  - Run: cd ai-atlas-nexus && git checkout main
+  - Run: uv sync --extra policy-mapper
+
+Error: Can't connect to vLLM endpoint
+→ Check cluster access / VPN connection
+→ Verify URL in cell #2 or environment variable
+
+Notebook shows JSON instead of cells
+→ Right-click → "Open With..." → "Jupyter Notebook"
+→ Install Jupyter extension if needed
+
+=================================================================
+FILE LOCATIONS
+=================================================================
+
+Project root:         /Users/aaracan/Visual Studio Code Projects/asago-examples
+Virtual environment:  .venv/ (created by uv)
+Notebook:            asago-policy-mapper/risk-extraction-demo.ipynb
+Policy examples:     asago-policy-mapper/policy_examples/ (27 files)
+AI Atlas Nexus:      ai-atlas-nexus/ (cloned repo at v1.2.3)
+Environment vars:    .env
+Config:              pyproject.toml (requires-python = ">=3.13,<3.14")
+Lockfile:            uv.lock
+
+=================================================================
+IMPORTANT NOTES
+=================================================================
+
+- Do NOT use Python 3.14 - it breaks Jupyter
+- Always select the .venv kernel in VS Code
+- The vLLM endpoint requires gemma-4-26b-a4b-it model
+- Extraction takes 5-10 minutes (normal, not crashed)
+- ai-atlas-nexus must use main branch (v1.2.5+) for Pydantic v2 compatibility
+- Do NOT use v1.2.3 - it causes 547 validation errors
+- 27 example policy documents are in policy_examples/
+
+=================================================================
